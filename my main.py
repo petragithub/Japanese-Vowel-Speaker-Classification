@@ -39,8 +39,8 @@ def main():
 
     
     param_grid = {
-        "features__segments": [1, 2, 3],
-        "features__std": [False],
+        "features__segments": [1, 2],
+        "features__std": [True],
         "classifier__C": [1],
         "classifier__gamma": ["scale"],
 
@@ -51,8 +51,10 @@ def main():
     search.fit(x_train, y_train)
 
     test_accuracy = search.score(x_test, y_test)
+    misclassifcation_percentage =  (1 - test_accuracy) * 100
 
     print(test_accuracy)
+    print(f"{misclassifcation_percentage:.2f}%")
 
 if __name__ == "__main__":
     main()
