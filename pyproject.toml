@@ -1,0 +1,21 @@
+[project]
+name = "projectjapvowels-materials"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "delovajaKolbasa2", email = "andrejtupikin228@gmail.com" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=2.2.6",
+    "ruff>=0.17.2",
+    "scikit-learn>=1.7.2",
+]
+
+[project.scripts]
+projectjapvowels-materials = "projectjapvowels_materials:main"
+
+[build-system]
+requires = ["uv_build>=0.13.4,<0.14.0"]
+build-backend = "uv_build"
