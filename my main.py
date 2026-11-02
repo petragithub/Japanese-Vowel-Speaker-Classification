@@ -22,7 +22,7 @@ def main():
     y_test = create_labels(TEST_UTTERANCES_COUNTS)
 
     ProjectPipeline = Pipeline([
-        ("features", FeatureExtractor(segments=5, std= True)),
+        ("features", FeatureExtractor(segments=2, std= True)),
         ("scale_features", StandardScaler()),
         ("classifier", SVC(kernel="rbf", C= 0.1, gamma="scale")) #RBF kernel can create flexible, nonlinear decision boundaries
     ])
