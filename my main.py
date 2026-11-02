@@ -1,29 +1,19 @@
+import matplotlib.pyplot as plt
+from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sklearn.pipeline import (
-    Pipeline,  # used for the case ofsequantial application of transformers: see further: 1. at first extract the features, 2. Scale those extracted features, 3. classify those scale dfeatures 
+    Pipeline,
 )
-from sklearn.preprocessing import StandardScaler  #-> standard for SVC + RBF rekrnel 
+from sklearn.preprocessing import StandardScaler
 from sklearn.svm import (
-    SVC,  #-> choice is based on the fact that it is a standartd kernel fgor the SVVM classification task. We would like to measure the similarity between the two data points in infinite dimension and then approach the classification by the majkoptrity vote.
+    SVC,
 )
 
 from data_preprocess import create_labels, load_data
 from model import FeatureExtractor
 
-# GidSearchCV 
-# Generate test sets such that all contain the same distribution of classes, or as close as possible.
-
-# Be invariant to class label: relabelling y = ["Happy", "Sad"] to y = [1, 0] should not change the indices generated.
-
-#Preserve order dependencies in the dataset ordering, when shuffle=False: all samples from class k in some test set were contiguous in y, or separated in y by samples from classes other than k.
-
-#Generate test sets where the smallest and largest differ by at most one sample.
-# StratifieldkFold -> tyope of cross-validation  
-
-
 TRAIN_UTTERANCES_COUNT = [30] * 9
-TEST_UTTERANCES_COUNTS = [31, 35, 88, 44, 29, 24, 40, 50, 29] #Number of UTTERANCES per speaker according to https://archive.ics.uci.edu/dataset/128/japanese+vowels
-
+TEST_UTTERANCES_COUNTS = [31, 35, 88, 44, 29, 24, 40, 50, 29] 
 
 def main():
     x_train = load_data("ae.train")
@@ -34,7 +24,7 @@ def main():
     ProjectPipeline = Pipeline([
         ("features", FeatureExtractor(segments=5, std= True)),
         ("scale_features", StandardScaler()),
-        ("classifier", SVC(kernel="rbf", C= 0.1, gamma="scale")) #RBF kernel can create flexible, nonlinear decision boundaries. 
+        ("classifier", SVC(kernel="rbf", C= 0.1, gamma="scale")) #RBF kernel can create flexible, nonlinear decision boundaries
     ])
 
     
@@ -53,8 +43,49 @@ def main():
     test_accuracy = search.score(x_test, y_test)
     misclassifcation_percentage =  (1 - test_accuracy) * 100
 
-    print(test_accuracy)
-    print(f"{misclassifcation_percentage:.2f}%")
+    print("Cross Validation")
+
+    for params, mean, std in zip(search.cv_results_["params"], search.cv_results_["mean_test_score"], search.cv_results_["std_test_score"]):
+        segments = params["features__segments"]
+        use_std = params["features__std"]
+
+        feature_count = segments * 12
+        if use_std:
+            feature_count += 12
+
+        print(f"{segments} / {feature_count} /"
+              f"{mean * 100:.2f}% / {std * 100 :.2f}")
+
+    print(f"Test accuracy: {test_accuracy:.4f}")
+    print(f"Misclassifcation percentage: {misclassifcation_percentage:.2f}%")
+
+    predictions = search.predict(x_test)
+    speakers = list(range(1,10))
+
+    matrix = confusion_matrix(y_test, predictions, labels=speakers)
+
+    print("Individual Speakers")
+
+    for i, speaker in enumerate(speakers):
+        correct = matrix[i, i]
+        total = matrix[i].sum()
+        accuracy = correct / total * 100
+
+        print(f"{speaker} / {correct} / {total} / {accuracy:.2f}%")
+
+    fig, ax = plt.subplots(figsize=(8, 7))
+
+    display = ConfusionMatrixDisplay (confusion_matrix=matrix, display_labels=speakers)
+
+    display.plot(ax=ax, values_format="d",colorbar=False)
+
+    ax.set_xlabel("Predicted speaker")
+    ax.set_ylabel("Actual speaker")
+    ax.set_title("Speaker classification on the test set")
+    fig.tight_layout()
+
+    fig.savefig("confusion_matrix.png", dpi=300, bbox_inches="tight")
+    plt.show()
 
 if __name__ == "__main__":
     main()
