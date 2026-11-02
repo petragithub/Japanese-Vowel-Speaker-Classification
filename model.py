@@ -3,7 +3,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 
 class FeatureExtractor(BaseEstimator, TransformerMixin):
-    def __init__(self, std=True, segments=3):
+    def __init__(self, std=True, segments=2):
         self.segments = segments
         self.std = std
 
